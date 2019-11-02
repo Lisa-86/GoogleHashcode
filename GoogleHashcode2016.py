@@ -150,7 +150,7 @@ def invUpdateOrderDel(order, quant, prod):
     
 
 
-probfile = open ('busy_day.in')
+probfile = open ('mother_of_all_warehouses.in')
 
 ### rows, cols, dronesno, T, maxload
 firstline = probfile.readline().split()
@@ -283,7 +283,7 @@ fd = sum([len(fd) for fd in timeline[T:]])
 
 print('solution list', solutionlist)            
 
-solution = open('busydaycommands.txt', 'w')
+solution = open('mother_of_all_warehouses.out', 'w')
 
 solution.write(str(len(solutionlist)) + '\n')
 
