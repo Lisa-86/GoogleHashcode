@@ -28,17 +28,17 @@ class Drone:
 
 
 class Lommand:
-    def __init__(self, droneid, warehouseid, producttype, quantity):
-        self.did = droneid
-        self.wid = warehouseid
+    def __init__(self, drone, warehouse, producttype, quantity):
+        self.drone = drone
+        self.warehouse = warehouse
         self.ptype = producttype
         self.quant = quantity
         self.letter = 'L'
 
 class Dommand:
-    def __init__(self, droneid, orderid, productype, quantity):
-        self.did = droneid
-        self.oid = orderid
+    def __init__(self, drone, order, productype, quantity):
+        self.drone = drone
+        self.order = order
         self.ptype = productype
         self.quant = quantity
         self.letter = 'D'
@@ -66,6 +66,8 @@ for id in range(order_no):
     order = Order(id, oloc, otot, oitemids)
     orders.append(order)
 
+# initially, all drones are available at the warehouse id 0, list of pids
+drones = [Drone(did, warehouses[0].loc[:], {}) for did in range(drones_no)]
 
 commands_no = int(fout.readline())
 # each drone has a list of commands
@@ -78,7 +80,9 @@ for _ in range(commands_no):
         wid = int(line[2])
         pid = int(line[3])
         quant = int(line[4])
-        command = Lommand(did, wid, pid, quant)
+        drone = drones[did]
+        warehouse = warehouses[wid]
+        command = Lommand(drone, warehouse, pid, quant)
         commands[did].append(command)
     elif cmd == 'U':
         raise Exception('Not implemented')
@@ -86,7 +90,9 @@ for _ in range(commands_no):
         oid = int(line[2])
         pid = int(line[3])
         quant = int(line[4])
-        command = Dommand(did, oid, pid, quant)
+        drone = drones[did]
+        order = orders[oid]
+        command = Dommand(drone, order, pid, quant)
         commands[did].append(command)
     elif cmd == 'W':
         wlen = int(line[2])
@@ -99,8 +105,6 @@ for _ in range(commands_no):
 
 timeline = [[] for _ in range(T)]
 
-# initially, all drones are available at the warehouse id 0, list of pids
-drones = [Drone(did, warehouses[0].loc[:], {}) for did in range(drones_no)]
 #print('drones', json.dumps(drones, indent=2))
 timeline[0] = drones
 
@@ -177,7 +181,7 @@ for t in range(T):
         # if it is the load command, it has to travel to the warehouse,
         elif fcmd.letter == 'L':
             # check location
-            wh = warehouses[fcmd.wid]
+            wh = fcmd.warehouse
             if wh.loc != drone.loc:
                 # the drone is not at the warehouse, postpone until it arrives
                 dst = calc_dst(drone.loc, wh.loc)
@@ -209,8 +213,7 @@ for t in range(T):
                 #print('Did', did, 'load', pid, 'from', wid)
 
         elif fcmd.letter == 'D':
-            order = orders[fcmd.oid]
-
+            order = fcmd.order
             if drone.loc != order.loc:
                 # wait till it arrives
                 dst = calc_dst(drone.loc, order.loc)
