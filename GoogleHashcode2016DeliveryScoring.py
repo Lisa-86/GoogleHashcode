@@ -71,16 +71,17 @@ for id in range(order_no):
     orders.append(order)
 
 
-# orders.sort(key=lambda o:o.prodvariety)
-# ourweights = [o.weight for o in orders]
-# prodTypeVar = [o.prodvariety for o in orders]
-# plt.scatter(prodTypeVar, ourweights)
-# plt.xlabel('Different Order Types (#)')
-# plt.ylabel('Total Order Weight')
-# plt.savefig('plots/orderweights_vs_typedifference.png', dpi=300)
-# plt.show()
-# import sys
-# sys.exit(0)
+orders.sort(key=lambda o:o.prodvariety)
+ourweights = [o.weight for o in orders]
+prodTypeVar = [o.prodvariety for o in orders]
+plt.scatter(prodTypeVar, ourweights)
+plt.xlabel('Different Order Types (#)')
+plt.xticks(range(1, len(set(prodTypeVar)) + 1))
+plt.ylabel('Total Order Weight')
+plt.savefig('plots/orderweights_vs_typedifference.png', dpi=300)
+plt.show()
+import sys
+sys.exit(0)
 
 # initially, all drones are available at the warehouse id 0, list of pids
 drones = [Drone(did, warehouses[0].loc[:], {}) for did in range(drones_no)]
