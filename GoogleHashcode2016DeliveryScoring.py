@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import matplotlib.pyplot as plt
+
 fin = open('mother_of_all_warehouses.in')
 fout = open('mother_of_all_warehouses.out')
 
@@ -13,12 +15,14 @@ class Warehouse:
         print('My location is ', self.loc)
 
 class Order:
-    def __init__(self, id, location, size, producttypes):
+    def __init__(self, id, location, size, producttypes, general_weights):
         self.id = id
         self.loc = location
         self.size = size
         # it is actually the index of the product type
         self.prods = producttypes
+        self.prodvariety = len(set(producttypes))
+        self.weight = sum(general_weights[pt] for pt in producttypes)
 
 class Drone:
     def __init__(self, id, location, inventory):
@@ -28,17 +32,17 @@ class Drone:
 
 
 class Lommand:
-    def __init__(self, droneid, warehouseid, producttype, quantity):
-        self.did = droneid
-        self.wid = warehouseid
+    def __init__(self, drone, warehouse, producttype, quantity):
+        self.drone = drone
+        self.warehouse = warehouse
         self.ptype = producttype
         self.quant = quantity
         self.letter = 'L'
 
 class Dommand:
-    def __init__(self, droneid, orderid, productype, quantity):
-        self.did = droneid
-        self.oid = orderid
+    def __init__(self, drone, order, productype, quantity):
+        self.drone = drone
+        self.order = order
         self.ptype = productype
         self.quant = quantity
         self.letter = 'D'
@@ -63,9 +67,23 @@ for id in range(order_no):
     otot = int(fin.readline())
     oitemids = [int(typ) for typ in fin.readline().split()]
     assert len(oitemids) == otot
-    order = Order(id, oloc, otot, oitemids)
+    order = Order(id, oloc, otot, oitemids, weights)
     orders.append(order)
 
+
+# orders.sort(key=lambda o:o.prodvariety)
+# ourweights = [o.weight for o in orders]
+# prodTypeVar = [o.prodvariety for o in orders]
+# plt.scatter(prodTypeVar, ourweights)
+# plt.xlabel('Different Order Types (#)')
+# plt.ylabel('Total Order Weight')
+# plt.savefig('plots/orderweights_vs_typedifference.png', dpi=300)
+# plt.show()
+# import sys
+# sys.exit(0)
+
+# initially, all drones are available at the warehouse id 0, list of pids
+drones = [Drone(did, warehouses[0].loc[:], {}) for did in range(drones_no)]
 
 commands_no = int(fout.readline())
 # each drone has a list of commands
@@ -78,7 +96,9 @@ for _ in range(commands_no):
         wid = int(line[2])
         pid = int(line[3])
         quant = int(line[4])
-        command = Lommand(did, wid, pid, quant)
+        drone = drones[did]
+        warehouse = warehouses[wid]
+        command = Lommand(drone, warehouse, pid, quant)
         commands[did].append(command)
     elif cmd == 'U':
         raise Exception('Not implemented')
@@ -86,7 +106,9 @@ for _ in range(commands_no):
         oid = int(line[2])
         pid = int(line[3])
         quant = int(line[4])
-        command = Dommand(did, oid, pid, quant)
+        drone = drones[did]
+        order = orders[oid]
+        command = Dommand(drone, order, pid, quant)
         commands[did].append(command)
     elif cmd == 'W':
         wlen = int(line[2])
@@ -99,8 +121,6 @@ for _ in range(commands_no):
 
 timeline = [[] for _ in range(T)]
 
-# initially, all drones are available at the warehouse id 0, list of pids
-drones = [Drone(did, warehouses[0].loc[:], {}) for did in range(drones_no)]
 #print('drones', json.dumps(drones, indent=2))
 timeline[0] = drones
 
@@ -177,7 +197,7 @@ for t in range(T):
         # if it is the load command, it has to travel to the warehouse,
         elif fcmd.letter == 'L':
             # check location
-            wh = warehouses[fcmd.wid]
+            wh = fcmd.warehouse
             if wh.loc != drone.loc:
                 # the drone is not at the warehouse, postpone until it arrives
                 dst = calc_dst(drone.loc, wh.loc)
@@ -209,8 +229,7 @@ for t in range(T):
                 #print('Did', did, 'load', pid, 'from', wid)
 
         elif fcmd.letter == 'D':
-            order = orders[fcmd.oid]
-
+            order = fcmd.order
             if drone.loc != order.loc:
                 # wait till it arrives
                 dst = calc_dst(drone.loc, order.loc)
