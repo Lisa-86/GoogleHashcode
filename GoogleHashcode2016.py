@@ -39,6 +39,7 @@ Created on Thu Oct 24 14:28:01 2019
 
 
 import math
+import matplotlib.pyplot as plt
 solutionlist = []
 
 ### make a function to check distance
@@ -61,8 +62,13 @@ def closestWh(dloc, whlist):
 ### make a loading function
 
 
-def whichItems(drone, wh, itemcounts):
-    for prod in range(prodTypeNo):
+def whichItems(drone, wh, itemcounts, ordlist):
+    # extract order types using the previously sorted orders
+    typesOrderBasedOnSortedOrders = []
+    for o in ordlist:
+        typesOrderBasedOnSortedOrders.extend(o[2])
+
+    for prod in typesOrderBasedOnSortedOrders:
         if wh[1][prod] == 0:
             continue
         if itemcounts[prod] == 0:
@@ -189,8 +195,13 @@ for o in range(noOrds):
     ordlist.append(order)
 
 #### need to sort the order list to have the shortest orders first
-    
-ordlist.sort(key=lambda x:x[1])
+ordlist.sort(key=lambda o:len(set(o[2])))
+# prodTypeVar = [len(set(o[2])) for o in ordlist]
+# prodTypeVar = [len(set(o[2])) for o in ordlist]
+# plt.hist(prodTypeVar)
+# plt.show()
+# import sys
+# sys.exit(0)
 
 #need to count through each order the quantity of each prod type
 itemcounts = [0 for prod in range(prodTypeNo)]
@@ -235,7 +246,7 @@ for t in range(T):
             #print ('drone', drone)
             if sum(drone[1]) == 0:
                 nearwh = closestWh(drone[0], whlist)
-                quantity, prodType = whichItems(drone, nearwh, itemcounts)
+                quantity, prodType = whichItems(drone, nearwh, itemcounts, ordlist)
                 if quantity == None or prodType == None:
                     continue
                 
